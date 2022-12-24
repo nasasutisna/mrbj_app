@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "966272703281",
+    "project_id": "mrbj-364307",
+    "storage_bucket": "mrbj-364307.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:966272703281:android:f44873c98fe7b257f2ee10",
+        "android_client_info": {
+          "package_name": "com.mrbj.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "966272703281-ua5jo9c4oeb3t1rlm28eb9ge3mb5fl3h.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD7pG6wJc86xbxi-RL09GFQELjSt1Fv3uc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "966272703281-ua5jo9c4oeb3t1rlm28eb9ge3mb5fl3h.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

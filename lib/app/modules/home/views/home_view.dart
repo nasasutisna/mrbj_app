@@ -1,15 +1,11 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mrbj_app/app/core/theme/app_theme.dart';
 import 'package:mrbj_app/app/routes/app_pages.dart';
+import 'package:skeletons/skeletons.dart';
 import '../controllers/home_controller.dart';
-
-final List<String> imgList = [
-  'lib/assets/images/banner1.jpg',
-  'lib/assets/images/banner2.jpg',
-  'lib/assets/images/banner3.png',
-];
 
 class HomeView extends GetView<HomeController> {
   final ctrl = Get.put(HomeController());
@@ -20,6 +16,7 @@ class HomeView extends GetView<HomeController> {
             body: ListView(
       children: [
         Container(
+          margin: EdgeInsets.only(bottom: MediaQuery.of(context).size.height - (MediaQuery.of(context).size.height - 50)),
           height: MediaQuery.of(context).size.height,
           child: Column(
             children: [
@@ -38,8 +35,7 @@ class HomeView extends GetView<HomeController> {
                     child: Text(
                       'Assalam Mualaikum',
                       textAlign: TextAlign.left,
-                      style: TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.bold),
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
@@ -52,22 +48,35 @@ class HomeView extends GetView<HomeController> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        Icon(Icons.location_on),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Icon(Icons.location_on),
+                        ),
                         SizedBox(width: 10),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'Bintaro, Tangerang Selatan',
-                            ),
-                            Text(
-                              'Sholat Ashar : 15.00 WIB',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                            Obx(() => Text(controller.city.value)),
+                            Container(
+                              width: MediaQuery.of(context).size.width / 2,
+                              child: Obx(() => CarouselSlider.builder(
+                                    itemCount: controller.jadwalSholat.length,
+                                    options: CarouselOptions(
+                                        autoPlay: true, height: 28, scrollDirection: Axis.vertical, autoPlayInterval: Duration(seconds: 6)),
+                                    itemBuilder: (context, index, realIdx) {
+                                      return Container(
+                                        child: Text(
+                                          controller.jadwalSholat.length > 1 ? controller.jadwalSholat[index] : '-',
+                                          style: TextStyle(fontWeight: FontWeight.bold),
+                                        ),
+                                      );
+                                    },
+                                  )),
                             ),
                           ],
                         )
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -81,57 +90,64 @@ class HomeView extends GetView<HomeController> {
               ),
               Container(
                   margin: EdgeInsets.only(left: 12, right: 12),
-                  decoration: BoxDecoration(
-                      color: Color.fromARGB(255, 235, 235, 235),
-                      borderRadius: BorderRadius.all(Radius.circular(12))),
-                  child: CarouselSlider(
-                    carouselController: ctrl.carouselController,
-                    options: CarouselOptions(
-                        aspectRatio: 2.0,
-                        autoPlay: true,
-                        viewportFraction: 1,
-                        onPageChanged: (index, reason) {
-                          ctrl.current.value = index;
-                        },
-                        enlargeStrategy: CenterPageEnlargeStrategy.height),
-                    items: imgList
-                        .map(
-                          (item) => Container(
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(12),
-                                image: DecorationImage(
-                                    image: AssetImage(item),
-                                    fit: BoxFit.cover)),
-                          ),
-                        )
-                        .toList(),
-                  )),
+                  decoration: BoxDecoration(color: Color.fromARGB(255, 235, 235, 235), borderRadius: BorderRadius.all(Radius.circular(12))),
+                  child: Obx(() => CarouselSlider(
+                        carouselController: ctrl.carouselController,
+                        options: CarouselOptions(
+                            aspectRatio: 2.0,
+                            autoPlay: true,
+                            viewportFraction: 1,
+                            onPageChanged: (index, reason) {
+                              ctrl.current.value = index;
+                            },
+                            enlargeStrategy: CenterPageEnlargeStrategy.height),
+                        items: controller.loadingGetSchedule.value == true || controller.listStudySchedule.value == null
+                            ? []
+                            : controller.listStudySchedule.value!.data!
+                                .map(
+                                  (item) => Container(
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                                      child: GestureDetector(
+                                          onTap: () {
+                                            Get.toNamed(Routes.STUDY_SCHEDULE_DETAIL, arguments: {"id": item.idStudySchedule});
+                                          },
+                                          child: CachedNetworkImage(
+                                            fit: BoxFit.cover,
+                                            width: MediaQuery.of(context).size.width,
+                                            imageUrl: item.image!,
+                                            placeholder: (context, url) => SkeletonAvatar(
+                                              style: SkeletonAvatarStyle(
+                                                  shape: BoxShape.rectangle, width: MediaQuery.of(context).size.width, height: 200),
+                                            ),
+                                          )),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                      ))),
               Obx(
                 () => Container(
                   margin: EdgeInsets.only(left: 12),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: imgList.asMap().entries.map((entry) {
-                      return GestureDetector(
-                        onTap: () =>
-                            ctrl.carouselController.animateToPage(entry.key),
-                        child: Container(
-                          width: 10.0,
-                          height: 10.0,
-                          margin: EdgeInsets.symmetric(
-                              vertical: 8.0, horizontal: 4.0),
-                          decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: (Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? Colors.white
-                                      : Colors.black)
-                                  .withOpacity(
-                                      ctrl.current == entry.key ? 0.9 : 0.4)),
+                  child: controller.loadingGetSchedule.value == true || controller.listStudySchedule.value == null
+                      ? Container()
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: controller.listStudySchedule.value!.data!.asMap().entries.map((entry) {
+                            return GestureDetector(
+                              onTap: () => ctrl.carouselController.animateToPage(entry.key),
+                              child: Container(
+                                width: 10.0,
+                                height: 10.0,
+                                margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+                                decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black)
+                                        .withOpacity(ctrl.current == entry.key ? 0.9 : 0.4)),
+                              ),
+                            );
+                          }).toList(),
                         ),
-                      );
-                    }).toList(),
-                  ),
                 ),
               ),
               Container(
@@ -160,9 +176,7 @@ class HomeView extends GetView<HomeController> {
                   padding: EdgeInsets.all(16),
                   width: MediaQuery.of(context).size.width,
                   margin: EdgeInsets.only(left: 12, right: 12),
-                  decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(12)),
+                  decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(12)),
                   child: Padding(
                       padding: const EdgeInsets.only(left: 12, right: 12),
                       child: Column(
@@ -173,17 +187,14 @@ class HomeView extends GetView<HomeController> {
                               Container(
                                   child: InkWell(
                                 onTap: () {
-                                  Get.toNamed(Routes.PROFILE);
+                                  Get.toNamed(Routes.SCHEDULE_SHOLAT);
                                 },
                                 child: Column(
                                   children: [
                                     Container(
                                       width: 50,
                                       height: 50,
-                                      decoration: BoxDecoration(
-                                          color: appThemeData.primaryColor,
-                                          borderRadius:
-                                              BorderRadius.circular(50)),
+                                      decoration: BoxDecoration(color: appThemeData.primaryColor, borderRadius: BorderRadius.circular(50)),
                                       child: Icon(
                                         Icons.schedule_rounded,
                                         color: Colors.white,
@@ -200,17 +211,14 @@ class HomeView extends GetView<HomeController> {
                               Container(
                                 child: InkWell(
                                     onTap: () {
-                                      Get.toNamed(Routes.PROFILE);
+                                      Get.toNamed(Routes.STUDY_SCHEDULE);
                                     },
                                     child: Column(
                                       children: [
                                         Container(
                                           width: 50,
                                           height: 50,
-                                          decoration: BoxDecoration(
-                                              color: appThemeData.primaryColor,
-                                              borderRadius:
-                                                  BorderRadius.circular(50)),
+                                          decoration: BoxDecoration(color: appThemeData.primaryColor, borderRadius: BorderRadius.circular(50)),
                                           child: Icon(
                                             Icons.calendar_month,
                                             color: Colors.white,
@@ -225,32 +233,29 @@ class HomeView extends GetView<HomeController> {
                                     )),
                               ),
                               Container(
-                                  child: InkWell(
-                                onTap: () {
-                                  Get.toNamed(Routes.PROFILE);
-                                },
-                                child: Column(
-                                  children: [
-                                    Container(
-                                      width: 50,
-                                      height: 50,
-                                      decoration: BoxDecoration(
-                                          color: appThemeData.primaryColor,
-                                          borderRadius:
-                                              BorderRadius.circular(50)),
-                                      child: Icon(
-                                        Icons.people_alt_outlined,
-                                        color: Colors.white,
-                                        size: 35,
-                                      ),
-                                    ),
-                                    SizedBox(
-                                      height: 6,
-                                    ),
-                                    Text('Muamalah')
-                                  ],
-                                ),
-                              ))
+                                child: InkWell(
+                                    onTap: () {
+                                      controller.openPageFeedback();
+                                    },
+                                    child: Column(
+                                      children: [
+                                        Container(
+                                          width: 50,
+                                          height: 50,
+                                          decoration: BoxDecoration(color: appThemeData.primaryColor, borderRadius: BorderRadius.circular(50)),
+                                          child: Icon(
+                                            Icons.feedback,
+                                            color: Colors.white,
+                                            size: 35,
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          height: 6,
+                                        ),
+                                        Text('Kritik & Saran')
+                                      ],
+                                    )),
+                              )
                             ],
                           ),
                           SizedBox(
@@ -262,17 +267,14 @@ class HomeView extends GetView<HomeController> {
                               Container(
                                 child: InkWell(
                                     onTap: () {
-                                      Get.toNamed(Routes.PROFILE);
+                                      Get.toNamed(Routes.COMING_SOON);
                                     },
                                     child: Column(
                                       children: [
                                         Container(
                                           width: 50,
                                           height: 50,
-                                          decoration: BoxDecoration(
-                                              color: appThemeData.primaryColor,
-                                              borderRadius:
-                                                  BorderRadius.circular(50)),
+                                          decoration: BoxDecoration(color: appThemeData.primaryColor, borderRadius: BorderRadius.circular(50)),
                                           child: Icon(
                                             Icons.money,
                                             color: Colors.white,
@@ -287,46 +289,40 @@ class HomeView extends GetView<HomeController> {
                                     )),
                               ),
                               Container(
-                                child: InkWell(
-                                    onTap: () {
-                                      Get.toNamed(Routes.PROFILE);
-                                    },
-                                    child: Column(
-                                      children: [
-                                        Container(
-                                          width: 50,
-                                          height: 50,
-                                          decoration: BoxDecoration(
-                                              color: appThemeData.primaryColor,
-                                              borderRadius:
-                                                  BorderRadius.circular(50)),
-                                          child: Icon(
-                                            Icons.feedback,
-                                            color: Colors.white,
-                                            size: 35,
-                                          ),
-                                        ),
-                                        SizedBox(
-                                          height: 6,
-                                        ),
-                                        Text('Kritik & Saran')
-                                      ],
-                                    )),
-                              ),
-                              Container(
                                   child: InkWell(
                                 onTap: () {
-                                  Get.toNamed(Routes.PROFILE);
+                                  Get.toNamed(Routes.COMING_SOON);
                                 },
                                 child: Column(
                                   children: [
                                     Container(
                                       width: 50,
                                       height: 50,
-                                      decoration: BoxDecoration(
-                                          color: appThemeData.primaryColor,
-                                          borderRadius:
-                                              BorderRadius.circular(50)),
+                                      decoration: BoxDecoration(color: appThemeData.primaryColor, borderRadius: BorderRadius.circular(50)),
+                                      child: Icon(
+                                        Icons.people_alt_outlined,
+                                        color: Colors.white,
+                                        size: 35,
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      height: 6,
+                                    ),
+                                    Text('Muamalah')
+                                  ],
+                                ),
+                              )),
+                              Container(
+                                  child: InkWell(
+                                onTap: () {
+                                  Get.toNamed(Routes.COMING_SOON);
+                                },
+                                child: Column(
+                                  children: [
+                                    Container(
+                                      width: 50,
+                                      height: 50,
+                                      decoration: BoxDecoration(color: appThemeData.primaryColor, borderRadius: BorderRadius.circular(50)),
                                       child: Icon(
                                         Icons.discount,
                                         color: Colors.white,
@@ -343,7 +339,10 @@ class HomeView extends GetView<HomeController> {
                             ],
                           ),
                         ],
-                      )))
+                      ))),
+              SizedBox(
+                height: 50,
+              ),
             ],
           ),
         ),

@@ -1,4 +1,4 @@
-package com.mrbj.app.mrbj_app
+package com.mrbj.app
 
 import io.flutter.embedding.android.FlutterActivity
 
